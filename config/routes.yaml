@@ -1,5 +1,22 @@
 controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
+    resource: ../src/Controller/
     type: attribute
+
+home:
+    path: /
+    controller: App\Controller\AuthController::index
+    methods: [GET]
+login:
+    path: /login
+    controller: App\Controller\AuthController::login
+    methods: [POST]
+
+logout:
+    path: /logout
+    controller: App\Controller\AuthController::logout
+    methods: [GET]
+
+register:
+    path: /register
+    controller: App\Controller\AuthController::register
+    methods: [POST]
