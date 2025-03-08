@@ -13,27 +13,51 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 #[ORM\Table(name: 'users')]
 class User implements PasswordAuthenticatedUserInterface
 {
-    public function __construct()
-    {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
-        $this->roles = new ArrayCollection();
-    }
+    
 
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "IDENTITY")]
     #[ORM\Column(type: "integer")]
     private ?int $id = null;
 
+    #[ORM\Column(length: 255, type: 'string', unique: true)]
+    private string $email;
 
+    #[ORM\Column(length: 255, type: 'string')]
+    private string $name;
+
+    
+    #[ORM\Column(length: 255, type: 'string')]
+    private string $lastName;
+
+    
+    #[ORM\Column(length: 255, type: 'string')]
+    private string $password;
+
+    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: "users")]
+    #[ORM\JoinTable(name: "user_roles")]
+    private Collection $roles;
+
+    #[ORM\OneToMany(targetEntity: Session::class, mappedBy: "user", cascade: ["remove"])]
+    private Collection $sessions;
+
+    #[ORM\Column(type: "datetime")]
+    private \DateTime $createdAt;
+
+    #[ORM\Column(type: "datetime")]
+    private \DateTime $updatedAt;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
+        $this->roles = new ArrayCollection();
+        $this->sessions = new ArrayCollection();
+    }
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-
-    #[ORM\Column(length: 255, type: 'string', unique: true)]
-    private string $email;
+    } 
 
     public function getEmail(): string
     {
@@ -45,8 +69,6 @@ class User implements PasswordAuthenticatedUserInterface
         $this->email = $email;
     }
 
-    #[ORM\Column(length: 255, type: 'string')]
-    private string $name;
 
     public function getName(): string
     {
@@ -58,8 +80,6 @@ class User implements PasswordAuthenticatedUserInterface
         $this->name = $name;
     }
 
-    #[ORM\Column(length: 255, type: 'string')]
-    private string $lastName;
 
     public function getLastName(): string
     {
@@ -71,8 +91,6 @@ class User implements PasswordAuthenticatedUserInterface
         $this->lastName = $lastName;
     }
 
-    #[ORM\Column(length: 255, type: 'string')]
-    private string $password;
 
     public function getPassword(): string
     {
@@ -84,9 +102,7 @@ class User implements PasswordAuthenticatedUserInterface
         $this->password = $password;
     }
 
-    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: "users")]
-    #[ORM\JoinTable(name: "user_roles")]
-    private Collection $roles;
+ 
 
     public function getRoles(): Collection
     {
@@ -111,32 +127,24 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\Column(type: 'datetime')]
-    private \DateTimeInterface $createdAt;
-
-    public function getCreatedAt(): \DateTimeInterface
+    public function getSessions(): Collection
     {
-        return $this->createdAt;
+        return $this->sessions;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    public function addSession(Session $session): void
     {
-        $this->createdAt = $createdAt;
-        return $this;
+        if (!$this->sessions->contains($session)) {
+            $this->sessions->add($session);
+        }
     }
 
-    #[ORM\Column(type: 'datetime')]
-    private \DateTimeInterface $updatedAt;
-
-
-    public function getUpdatedAt(): \DateTimeInterface
+    public function removeSession(Session $session): void
     {
-        return $this->updatedAt;
+        if ($this->sessions->contains($session)) {
+            $this->sessions->removeElement($session);
+        }
     }
 
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
-        return $this;
-    }
+
 }

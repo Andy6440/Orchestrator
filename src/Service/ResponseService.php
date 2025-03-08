@@ -31,6 +31,8 @@ class ResponseService
             return $this->success($successMessage, $data, $successStatus);
         } catch (ApiException $e) {
             return $this->error($e->getMessage(), $e->getErrors(), $e->getStatusCode());
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage(), [], 500);
         }
     }
 }
