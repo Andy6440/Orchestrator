@@ -14,8 +14,8 @@ class Role
 
     public function __construct()
     {
-        $this->createdAt = Carbon::now();
-        $this->updatedAt = Carbon::now();
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
         $this->users = new ArrayCollection();
     }
     #[ORM\Id]
@@ -82,29 +82,31 @@ class Role
     }
 
     #[ORM\Column(type: 'datetime')]
-    private Carbon $createdAt;
+    private \DateTimeInterface $createdAt;
 
-    public function getCreatedAt(): Carbon
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(Carbon $createdAt): void
+    public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+        return $this;
     }
 
     #[ORM\Column(type: 'datetime')]
-    private Carbon $updatedAt;
+    private \DateTimeInterface $updatedAt;
 
 
-    public function getUpdatedAt(): Carbon
+    public function getUpdatedAt(): \DateTimeInterface
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(Carbon $updatedAt): void
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+        return $this;
     }
 }

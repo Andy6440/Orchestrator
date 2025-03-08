@@ -7,15 +7,16 @@ use Carbon\Carbon;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
-class User
+class User implements PasswordAuthenticatedUserInterface
 {
     public function __construct()
     {
-        $this->createdAt = Carbon::now();
-        $this->updatedAt = Carbon::now();
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
         $this->roles = new ArrayCollection();
     }
 
@@ -71,16 +72,16 @@ class User
     }
 
     #[ORM\Column(length: 255, type: 'string')]
-    private string $passwordHash;
+    private string $password;
 
-    public function getPasswordHash(): string
+    public function getPassword(): string
     {
-        return $this->passwordHash;
+        return $this->password;
     }
 
-    public function setPasswordHash(string $passwordHash): void
+    public function setPassword(string $password): void
     {
-        $this->passwordHash = $passwordHash;
+        $this->password = $password;
     }
 
     #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: "users")]
@@ -111,29 +112,31 @@ class User
     }
 
     #[ORM\Column(type: 'datetime')]
-    private Carbon $createdAt;
+    private \DateTimeInterface $createdAt;
 
-    public function getCreatedAt(): Carbon
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(Carbon $createdAt): void
+    public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+        return $this;
     }
 
     #[ORM\Column(type: 'datetime')]
-    private Carbon $updatedAt;
+    private \DateTimeInterface $updatedAt;
 
 
-    public function getUpdatedAt(): Carbon
+    public function getUpdatedAt(): \DateTimeInterface
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(Carbon $updatedAt): void
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+        return $this;
     }
 }
