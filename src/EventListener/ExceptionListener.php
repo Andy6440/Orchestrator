@@ -28,7 +28,7 @@ class ExceptionListener
         $message = 'An unexpected error occurred';
         $errors = [];
 
-        // Manejo de excepciones personalizadas
+            // Manejo de excepciones personalizadas
         if ($exception instanceof ApiException) {
             $statusCode = $exception->getStatusCode();
             $message = $exception->getMessage();

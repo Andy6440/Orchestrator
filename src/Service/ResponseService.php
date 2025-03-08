@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Exception\ApiException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ResponseService
@@ -28,8 +29,8 @@ class ResponseService
         try {
             $data = $callback();
             return $this->success($successMessage, $data, $successStatus);
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage(), [], 401);
+        } catch (ApiException $e) {
+            return $this->error($e->getMessage(), $e->getErrors(), $e->getStatusCode());
         }
     }
 }
