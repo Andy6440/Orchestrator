@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Exception\ApiException;
+use App\Service\AuthService;
+use App\Service\ResponseService;
 use App\Validator\LoginRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\MakerBundle\Validator;
@@ -12,37 +14,23 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class AuthController extends AbstractController
 {
-    public function register(): JsonResponse
-    {
-        dd('register');
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/AuthController.php',
-        ]);
-    }
-    public function logout(): JsonResponse
-    {
-        dd('logout');
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/AuthController.php',
-        ]);
-    }
+    private AuthService $authService;
+    private ResponseService $responseService;
 
-    public function index(): JsonResponse
+    public function __construct(AuthService $authService, ResponseService $responseService)
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/AuthController.php',
-        ]);
+        $this->authService = $authService;
+        $this->responseService = $responseService;
     }
     public function login(Request $request, ValidatorInterface $validator): JsonResponse
     {
 
         $data = json_decode($request->getContent(), true);
 
-       $validator->validate($data, new LoginRequest());
-
-        return new JsonResponse(['message' => 'Login successful'], 200);
+        return $this->responseService->withResponse(
+            fn() => $this->authService->login($data),
+            'Login successful',
+            200
+        );
     }
 }

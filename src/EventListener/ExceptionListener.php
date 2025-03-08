@@ -2,6 +2,7 @@
 namespace App\EventListener;
 
 use App\Exception\ApiException;
+use App\Service\ResponseService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -11,11 +12,13 @@ class ExceptionListener
 {
     private string $env;
     private LoggerInterface $logger;
+    private ResponseService  $response;
 
-    public function __construct(string $env, LoggerInterface $logger)
+    public function __construct(string $env, LoggerInterface $logger, ResponseService  $response)
     {
         $this->env = $env;
         $this->logger = $logger;
+        $this->response = $response;
     }
 
     public function onKernelException(ExceptionEvent $event): void
@@ -51,11 +54,7 @@ class ExceptionListener
         //     ];
         // }
 
-        $response = new JsonResponse([
-            'success' => false,
-            'message' => $message,
-            'errors' => $errors,
-        ], $statusCode);
+        $response = $this->response->error($message, $errors, $statusCode);
 
         $event->setResponse($response);
     }
