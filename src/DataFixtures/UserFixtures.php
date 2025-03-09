@@ -21,7 +21,8 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager): void
     {
         // Recuperar el rol desde `RoleFixtures`
-        $roleSuperAdmin = $this->getReference('ROLE_SUPER_ADMIN',Role::class);
+        $roleSuperAdmin = $this->getReference('ROLE_SUPER_ADMIN', Role::class);
+        $roleUser = $this->getReference('ROLE_USER', Role::class);
 
         // Crear usuario Super Admin
         $superAdmin = new User();
@@ -33,7 +34,19 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
         );
         $superAdmin->addRole($roleSuperAdmin);
 
+        // Crear usuario de prueba
+        $testUser = new User();
+        $testUser->setEmail('testuser@example.com');
+        $testUser->setName('Test');
+        $testUser->setLastName('User');
+        $testUser->setPassword(
+            $this->passwordHasher->hashPassword($testUser, 'testuser123')
+        );
+        $testUser->addRole($roleUser);
+
+        // Persistir usuarios
         $manager->persist($superAdmin);
+        $manager->persist($testUser);
         $manager->flush();
     }
 
