@@ -41,4 +41,12 @@ class SessionRepository extends ServiceEntityRepository
             $this->entityManager->flush();
         }
     }
+
+    public function delete(Session $session): void
+    {
+        $this->entityManager->remove($session);
+        $this->entityManager->flush();
+    }
+
+
 }

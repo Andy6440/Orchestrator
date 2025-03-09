@@ -17,7 +17,7 @@ class Session
     #[ORM\Column(type: "string", unique: true)]
     private string $sessionId;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "sessions")]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "sessions", fetch: "EAGER")]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private User $user;
 
@@ -45,8 +45,17 @@ class Session
         return $this->sessionId;
     }
 
+    public function setSessionId(string $sessionId): self
+    {
+        $this->sessionId = $sessionId;
 
+        return $this;
+    }
 
+    public function getUser(): User
+    {
+        return $this->user;
+    }
     public function getCreatedAt(): \DateTime
     {
         return $this->createdAt;

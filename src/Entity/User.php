@@ -8,10 +8,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
-class User implements PasswordAuthenticatedUserInterface
+class User implements PasswordAuthenticatedUserInterface,UserInterface
 {
     
 
@@ -102,11 +103,9 @@ class User implements PasswordAuthenticatedUserInterface
         $this->password = $password;
     }
 
- 
-
-    public function getRoles(): Collection
+    public function getRoles(): array
     {
-        return $this->roles;
+        return $this->roles->map(fn(Role $role) => $role->getCode())->toArray();
     }
 
     public function addRole(Role $role): self
@@ -144,6 +143,18 @@ class User implements PasswordAuthenticatedUserInterface
         if ($this->sessions->contains($session)) {
             $this->sessions->removeElement($session);
         }
+    }
+
+   
+
+    public function getUserIdentifier(): string
+    {
+        // devolver el identificador del usuario
+        return $this->email;
+    }
+
+    public function eraseCredentials(): void
+    {
     }
 
 

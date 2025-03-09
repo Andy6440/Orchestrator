@@ -6,17 +6,23 @@ home:
     path: /
     controller: App\Controller\AuthController::index
     methods: [GET]
+    options:
+        isPublic: true
 login:
-    path: /login
+    path: /auth/login
     controller: App\Controller\AuthController::login
     methods: [POST]
-
+    options:
+        isPublic: true
 logout:
-    path: /logout
+    path: /api/auth/logout
     controller: App\Controller\AuthController::logout
-    methods: [GET]
-
+    methods: [POST]
+    options:
+        isPublic: false
 register:
-    path: /register
+    path: /auth/register
     controller: App\Controller\AuthController::register
     methods: [POST]
+    options:
+        isPublic: true

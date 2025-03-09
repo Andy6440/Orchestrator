@@ -33,4 +33,13 @@ final class AuthController extends AbstractController
             200
         );
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        return $this->responseService->withResponse(
+            fn() => $this->authService->logout($request->attributes->get('session')),
+            'Logout successful',
+            200
+        );
+    }
 }

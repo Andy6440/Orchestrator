@@ -44,4 +44,16 @@ class AuthService
            'expires_at' => $session->getExpiresAt()->format('Y-m-d H:i:s'),
         ];
     }
+
+    public function logout(Session $session)
+    {
+        if(!$session) {
+            throw new ApiException('Invalid session', [], 401);
+        }
+        $this->sessionRepository->delete($session);
+
+        return [
+            'logout' => true
+        ];
+    }
 }
