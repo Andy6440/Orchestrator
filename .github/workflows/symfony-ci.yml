@@ -66,9 +66,14 @@ jobs:
           php bin/console doctrine:schema:update --force
           php bin/console doctrine:fixtures:load --no-interaction
           echo "Database is ready!"
+          sleep 5  # 🔹 Espera 5 segundos para asegurar que MySQL termina todos los procesos
 
       - name: Debug Database Schema After Setup
-        run: php bin/console doctrine:query:sql "SHOW TABLES"
+        run: |
+          echo "Verifying if tables exist..."
+          php bin/console doctrine:query:sql "SHOW TABLES"
+          sleep 2  # 🔹 Espera 2 segundos antes de los tests
 
       - name: Run tests
         run: php bin/phpunit --coverage-text --colors=never
+
