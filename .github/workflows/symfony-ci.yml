@@ -53,15 +53,12 @@ jobs:
             sleep 2
           done
 
-      - name: Debug Database Schema Before Setup
-        run: php bin/console doctrine:query:sql "SHOW TABLES" || true
-
       - name: Prepare Database
         run: |
           echo "⚙️ Resetting database..."
           mysql -h 127.0.0.1 -u user -ppassword -e "DROP DATABASE IF EXISTS database_test;"
           mysql -h 127.0.0.1 -u user -ppassword -e "CREATE DATABASE database_test;"
-          
+
           echo "📌 Creating database if not exists..."
           php bin/console doctrine:database:create --if-not-exists
           
@@ -81,9 +78,9 @@ jobs:
         run: |
           echo "🔍 Verifying if tables exist..."
           php bin/console doctrine:query:sql "SHOW TABLES" || { echo "❌ No tables found!"; exit 1; }
-          sleep 5  # 🔹 Espera 2 segundos antes de los tests.
+          sleep 2  # 🔹 Espera 2 segundos antes de los tests.
 
       - name: Run tests
-        run: php bin/phpunit --coverage-text --colors=never
-
-
+        env:
+          APP_ENV: test
+        run: php bin/phpunit --configuration phpunit.dist.xml --coverage-text --colors=never
