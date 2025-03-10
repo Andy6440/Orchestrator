@@ -9,43 +9,49 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 class User implements PasswordAuthenticatedUserInterface,UserInterface
 {
-    
-
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "IDENTITY")]
     #[ORM\Column(type: "integer")]
+    #[Groups(["user:read"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, type: 'string', unique: true)]
+    #[Groups(["user:read", "user:write"])]
     private string $email;
 
     #[ORM\Column(length: 255, type: 'string')]
+    #[Groups(["user:read", "user:write"])]
     private string $name;
 
-    
     #[ORM\Column(length: 255, type: 'string')]
+    #[Groups(["user:read", "user:write"])]
     private string $lastName;
 
-    
     #[ORM\Column(length: 255, type: 'string')]
+    #[Groups(["user:write"])]
     private string $password;
 
     #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: "users")]
     #[ORM\JoinTable(name: "user_roles")]
+    #[Groups(["user:read", "user:write"])]
     private Collection $roles;
 
     #[ORM\OneToMany(targetEntity: Session::class, mappedBy: "user", cascade: ["remove"])]
+    #[Groups(["user:read", "user:write"])]
     private Collection $sessions;
 
     #[ORM\Column(type: "datetime")]
+    #[Groups(["user:read"])]
     private \DateTime $createdAt;
 
     #[ORM\Column(type: "datetime")]
+    #[Groups(["user:read"])]
     private \DateTime $updatedAt;
 
     public function __construct()

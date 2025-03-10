@@ -26,3 +26,38 @@ logout:
     methods: [POST]
     options:
         isPublic: false
+tasks_index:
+    path: /api/tasks
+    controller: App\Controller\TaskController::index
+    methods: [GET]
+    options:
+        isPublic: false
+    requirements:
+        _format: json
+tasks_create:
+    path: /api/tasks
+    controller: App\Controller\TaskController::create
+    methods: [POST]
+    options:
+        isPublic: false
+    requirements:
+        _format: json
+
+tasks_update:
+    path: /api/tasks/{id}
+    controller: App\Controller\TaskController::update
+    methods: [PUT, PATCH]
+    options:
+        isPublic: false
+    requirements:
+        _format: json
+
+tasks_delete:
+    path: /api/tasks/{id}
+    controller: App\Controller\TaskController::delete
+    methods: [DELETE]
+    options:
+        isPublic: false
+    requirements:
+        _format: json
+
