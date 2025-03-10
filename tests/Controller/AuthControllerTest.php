@@ -129,4 +129,80 @@ final class AuthControllerTest extends WebTestCase
             $response->getContent()
         );
     }
+
+    public function testUserRegister()
+    {
+        $entityManager = $this->entityManager;
+
+        // 1️⃣ Generar un email aleatorio para evitar conflictos en los tests
+        $randomEmail = 'testuser_' . uniqid() . '@example.com';
+
+        // 2️⃣ Datos del usuario de prueba
+        $userData = [
+            "email" => $randomEmail,
+            "name" => "Test",
+            "lastName" => "User",
+            "password" => "TestUser123",
+            "roles" => [
+                "ROLE_USER"
+            ]
+        ];
+
+        // 3️⃣ Llamar al endpoint de registro
+        $this->client->request('POST', '/auth/register', [], [], [
+            'CONTENT_TYPE' => 'application/json'
+        ], json_encode($userData));
+
+        // 4️⃣ Verificar la respuesta de la API
+        $response = $this->client->getResponse();
+        $this->assertEquals(Response::HTTP_CREATED, $response->getStatusCode(), "Response status should be 201 Created");
+        self::assertJson($response->getContent());
+
+        $data = json_decode($response->getContent(), true);
+        self::assertArrayHasKey('success', $data);
+
+        // 5️⃣ Verificar que el usuario fue guardado en la base de datos
+        $newUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $randomEmail]);
+        $this->assertNotNull($newUser, 'User should be saved in the database');
+    }
+
+    public function testUserRegisterFailsDueToInvalidData()
+    {
+        $entityManager = $this->entityManager;
+
+        // 1️⃣ Datos del usuario de prueba (sin email)
+        $userData = [
+            "name" => "Test",
+            "lastName" => "User",
+            "password" => "TestUser123",
+            "roles" => [
+                "ROLE_USER"
+            ]
+        ];
+
+        // 2️⃣ Llamar al endpoint de registro con datos inválidos
+        $this->client->request('POST', '/auth/register', [], [], [
+            'CONTENT_TYPE' => 'application/json'
+        ], json_encode($userData));
+
+        // 3️⃣ Verificar la respuesta de la API (debe fallar con 400 Bad Request)
+        $response = $this->client->getResponse();
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode(), "Response should be 400 Bad Request");
+        self::assertJson($response->getContent());
+
+        // 4️⃣ Verificar que el JSON contiene los errores esperados
+        $data = json_decode($response->getContent(), true);
+        self::assertArrayHasKey('message', $data);
+        self::assertEquals('Invalid data', $data['message']);
+        self::assertArrayHasKey('errors', $data);
+        self::assertArrayHasKey('email', $data['errors']); // Debe mostrar error por falta de email
+    }
+
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        $this->client = null;
+        $this->entityManager->close();
+    }
 }
