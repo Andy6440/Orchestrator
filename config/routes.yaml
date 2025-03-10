@@ -14,15 +14,15 @@ login:
     methods: [POST]
     options:
         isPublic: true
-logout:
-    path: /api/auth/logout
-    controller: App\Controller\AuthController::logout
-    methods: [POST]
-    options:
-        isPublic: false
 register:
     path: /auth/register
     controller: App\Controller\AuthController::register
     methods: [POST]
     options:
         isPublic: true
+logout:
+    path: /api/auth/logout
+    controller: App\Controller\AuthController::logout
+    methods: [POST]
+    options:
+        isPublic: false

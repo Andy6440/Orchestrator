@@ -16,35 +16,36 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use App\Repository\SessionRepository;
 use App\Service\ResponseService;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class SessionAuthenticator extends AbstractAuthenticator
 {
     private RouterInterface $router;
     private SessionRepository $sessionRepository;
     private ResponseService $responseService;
+    private AuthorizationCheckerInterface $authorizationChecker;
 
 
-    public function __construct(RouterInterface $router, SessionRepository $sessionRepository, ResponseService $responseService)
+    public function __construct(
+        RouterInterface $router,
+         SessionRepository $sessionRepository,
+          ResponseService $responseService,
+          AuthorizationCheckerInterface $authorizationChecker)
     {
         $this->router = $router;
         $this->sessionRepository = $sessionRepository;
         $this->responseService = $responseService;
+        $this->authorizationChecker = $authorizationChecker;
     }
 
     public function supports(Request $request): ?bool
     {
-        $routeName = $request->attributes->get('_route');
-
-        if (!$routeName) {
-            return false;
-        }
-
-        $route = $this->router->getRouteCollection()->get($routeName);
-        if ($route && $route->getOption('isPublic') === true) {
+        // Pregunta al Voter si la ruta es pública
+        if ($this->authorizationChecker->isGranted('IS_PUBLIC_ROUTE')) {
             return false; // Permitir acceso sin autenticación
         }
-        $hasAuthorization = $request->headers->has('Authorization');
-        return $hasAuthorization;
+
+        return $request->headers->has('Authorization'); // Requiere autenticación si hay un token
     }
 
     public function authenticate(Request $request): Passport

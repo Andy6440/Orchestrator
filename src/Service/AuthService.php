@@ -6,7 +6,9 @@ use App\Entity\Session;
 use App\Exception\ApiException;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
+use App\Validator\CreateUserRequest;
 use App\Validator\LoginRequest;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthService
@@ -14,12 +16,13 @@ class AuthService
     private ValidatorInterface $validator;
     private UserRepository $userRepository;
     private SessionRepository $sessionRepository;
-    
-    public function __construct(ValidatorInterface $validator, UserRepository $userRepository, SessionRepository $sessionRepository)
+    private $serializer;
+    public function __construct(ValidatorInterface $validator, UserRepository $userRepository, SessionRepository $sessionRepository,SerializerInterface $serializer)
     {
         $this->validator = $validator;
         $this->userRepository = $userRepository;
         $this->sessionRepository = $sessionRepository;
+        $this->serializer = $serializer;
     }
 
     public function login(array $data)
@@ -54,6 +57,22 @@ class AuthService
 
         return [
             'logout' => true
+        ];
+    }
+
+    public function register(array $data)
+    {
+          // validate the request data
+        $this->validator->validate($data, new CreateUserRequest());
+        $user = $this->userRepository->saveUserWithRole($data);
+        if(!$user) {
+            throw new ApiException('User could not be created', [], 500);
+        }
+       
+        $userArray = $this->serializer->serialize($user, 'json');
+        $userArray = json_decode($userArray, true);
+        return [
+            'user' => $userArray
         ];
     }
 }
