@@ -57,4 +57,10 @@ class TaskService
 
     }
 
+    public function delete($task)
+    {       
+        $this->taskRepository->delete($task);
+        return [];
+    }
+
 }

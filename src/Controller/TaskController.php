@@ -42,4 +42,13 @@ final class TaskController extends AbstractController
         );
     }
 
+    public function delete(Request $request, $id): JsonResponse
+    {
+        return $this->responseService->withResponseTransaction(
+            fn() => $this->taskService->delete($id),
+            'Delete successful',
+            200
+        );
+    }
+
 }
