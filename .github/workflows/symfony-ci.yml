@@ -43,46 +43,49 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: |
-          echo "Waiting for MySQL to be ready..."
+          echo "⏳ Waiting for MySQL to be ready..."
           for i in {1..30}; do
             if mysqladmin ping -h"127.0.0.1" --silent; then
-              echo "MySQL is up!"
+              echo "✅ MySQL is up!"
               break
             fi
-            echo "Waiting for MySQL..."
+            echo "⚠️ Waiting for MySQL..."
             sleep 2
           done
 
       - name: Prepare Database
+        env:
+          APP_ENV: test  # 🔹 Asegura que Symfony use la BD correcta
         run: |
-            echo "⚙️ Resetting database..."
-            mysql -h 127.0.0.1 -u user -ppassword -e "DROP DATABASE IF EXISTS database_test;"
-            mysql -h 127.0.0.1 -u user -ppassword -e "CREATE DATABASE database_test;"
-        
-            echo "📌 Creating database if not exists..."
-            php bin/console doctrine:database:create --if-not-exists
-        
-            echo "🔄 Generating migration diff..."
-            php bin/console doctrine:migrations:diff || { echo "❌ Migration diff failed"; exit 1; }
-        
-            echo "🚀 Running migrations..."
-            php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || { echo "❌ Migration failed"; exit 1; }
-        
-            echo "📌 Updating schema..."
-            php bin/console doctrine:schema:update --force || { echo "❌ Schema update failed"; exit 1; }
-        
-            echo "📌 Loading fixtures..."
-            php bin/console doctrine:fixtures:load --no-interaction || { echo "❌ Fixtures failed"; exit 1; }
-        
-            echo "✅ Database is ready!"
-            sleep 5  # 🔹 Esperamos 5 segundos para asegurarnos de que MySQL termine todos los procesos.
+          echo "⚙️ Resetting database..."
+          mysql -h 127.0.0.1 -u user -ppassword -e "DROP DATABASE IF EXISTS database_test;"
+          mysql -h 127.0.0.1 -u user -ppassword -e "CREATE DATABASE database_test;"
+
+          echo "📌 Creating database if not exists..."
+          php bin/console doctrine:database:create --if-not-exists --env=test
+
+          echo "🔄 Generating migration diff..."
+          php bin/console doctrine:migrations:diff --env=test || { echo "❌ Migration diff failed"; exit 1; }
+
+          echo "🚀 Running migrations..."
+          php bin/console doctrine:migrations:migrate --no-interaction --env=test || { echo "❌ Migration failed"; exit 1; }
+
+          echo "📌 Updating schema..."
+          php bin/console doctrine:schema:update --force --env=test || { echo "❌ Schema update failed"; exit 1; }
+
+          echo "📌 Loading fixtures..."
+          php bin/console doctrine:fixtures:load --no-interaction --env=test || { echo "❌ Fixtures failed"; exit 1; }
+
+          echo "✅ Database is ready!"
+          sleep 5  # 🔹 Esperamos 5 segundos para asegurarnos de que MySQL termine todos los procesos.
+
       - name: Debug Database Schema After Setup
         run: |
-            echo "🔍 Verifying if tables exist..."
-            php bin/console doctrine:query:sql "SHOW TABLES" || { echo "❌ No tables found!"; exit 1; }
-            sleep 2  # 🔹 Espera 2 segundos antes de los tests.       
+          echo "🔍 Verifying if tables exist..."
+          php bin/console doctrine:query:sql "SHOW TABLES" --env=test || { echo "❌ No tables found!"; exit 1; }
+          sleep 2  # 🔹 Espera 2 segundos antes de los tests.
 
       - name: Run tests
         env:
           APP_ENV: test
-        run: php bin/phpunit --configuration phpunit.dist.xml --coverage-text --colors=never
+        run: php bin/phpunit --coverage-text --colors=never
