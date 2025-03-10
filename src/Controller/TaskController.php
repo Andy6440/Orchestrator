@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Task;
 use App\Service\ResponseService;
 use App\Service\TaskService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,4 +30,16 @@ final class TaskController extends AbstractController
             201
         );
     }
+
+    public function update(Request $request, $id): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $session = $request->attributes->get('session');
+        return $this->responseService->withResponseTransaction(
+            fn() => $this->taskService->update($id,$data, $session),
+            'Update successful',
+            200
+        );
+    }
+
 }

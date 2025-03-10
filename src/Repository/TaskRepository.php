@@ -17,7 +17,7 @@ class TaskRepository extends ServiceEntityRepository
 
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, User::class);
+        parent::__construct($registry, Task::class);
         $this->entityManager = $registry->getManager();
     }
 
@@ -28,7 +28,7 @@ class TaskRepository extends ServiceEntityRepository
         $createdBy = $userRepository->find($taskData['createdBy']);
 
         if (!$createdBy) {
-            throw new ApiException('User not found',['createdBy' => 'User not found'], 404);
+            throw new ApiException('User not found', ['createdBy' => 'User not found'], 404);
         }
 
         // Buscar el usuario asignado si existe
@@ -53,5 +53,63 @@ class TaskRepository extends ServiceEntityRepository
         $this->entityManager->flush();
 
         return $task;
+    }
+
+    public function update( $task, array $taskData): Task
+    {
+        $task = $this->find($task);
+        // Buscar el usuario creador en la base de datos si se proporciona
+        if (isset($taskData['createdBy'])) {
+            $userRepository = $this->entityManager->getRepository(User::class);
+            $createdBy = $userRepository->find($taskData['createdBy']);
+
+            if (!$createdBy) {
+                throw new ApiException('User not found', ['createdBy' => 'User not found'], 404);
+            }
+
+            $task->setCreatedBy($createdBy);
+        }
+
+        // Buscar el usuario asignado si se proporciona
+        if (isset($taskData['assignedTo'])) {
+            $userRepository = $this->entityManager->getRepository(User::class);
+            $assignedTo = $userRepository->find($taskData['assignedTo']);
+
+            if (!$assignedTo) {
+                throw new ApiException('Assigned user not found', ['assignedTo' => 'User not found'], 404);
+            }
+
+            $task->setAssignedTo($assignedTo);
+        }
+
+        // Actualizar los datos de la tarea
+        if (isset($taskData['title'])) {
+            $task->setTitle($taskData['title']);
+        }
+
+        if (isset($taskData['description'])) {
+            $task->setDescription($taskData['description']);
+        }
+
+        if (isset($taskData['status'])) {
+            $task->setStatus($taskData['status']);
+        }
+
+        // Guardar los cambios en la base de datos
+        $this->entityManager->flush();
+
+        return $task;
+    }
+
+    public function delete(int $taskId): void
+    {
+        $task = $this->find($taskId);
+
+        if (!$task) {
+            throw new ApiException('Task not found', ['taskId' => 'Task not found'], 404);
+        }
+
+        $this->entityManager->remove($task);
+        $this->entityManager->flush();
     }
 }

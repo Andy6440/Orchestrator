@@ -46,7 +46,7 @@ tasks_create:
 tasks_update:
     path: /api/tasks/{id}
     controller: App\Controller\TaskController::update
-    methods: [PUT, PATCH]
+    methods: [POST]
     options:
         isPublic: false
     requirements:

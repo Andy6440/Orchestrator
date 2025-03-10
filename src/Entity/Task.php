@@ -29,12 +29,12 @@ class Task
     #[Groups(["task:read", "task:write"])]
     private string $status;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, fetch: "EAGER")]
     #[ORM\JoinColumn(name: "assigned_to", referencedColumnName: "id", nullable: true, onDelete: "SET NULL")]
     #[Groups(["task:read"])]
     private ?User $assignedTo = null;
-
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    
+    #[ORM\ManyToOne(targetEntity: User::class, fetch: "EAGER")]
     #[ORM\JoinColumn(name: "created_by", referencedColumnName: "id", nullable: false)]
     #[Groups(["task:read"])]
     private ?User $createdBy;
