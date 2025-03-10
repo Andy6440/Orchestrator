@@ -53,19 +53,14 @@ jobs:
             sleep 2
           done
 
-      - name: Drop and recreate test database
+      - name: Prepare Database
         run: |
+          set -e  # 🚨 Hace que el script falle si algún comando falla
           php bin/console doctrine:database:drop --force --if-exists
           php bin/console doctrine:database:create
-
-      - name: Run migrations
-        run: php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
-
-      - name: Ensure database schema is up to date
-        run: php bin/console doctrine:schema:update --force
-
-      - name: Load fixtures
-        run: php bin/console doctrine:fixtures:load --no-interaction
+          php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+          php bin/console doctrine:schema:update --force
+          php bin/console doctrine:fixtures:load --no-interaction
 
       - name: Run tests
         run: php bin/phpunit --coverage-text --colors=never
