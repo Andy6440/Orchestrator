@@ -42,7 +42,7 @@ jobs:
           coverage: xdebug
 
       - name: Set environment variables
-        run: echo "DATABASE_URL=mysql://user:password@127.0.0.1:3306/database" > .env.test.local
+        run: echo "DATABASE_URL=mysql://root:root@127.0.0.1:3306/database" > .env.test
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
