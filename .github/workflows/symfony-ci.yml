@@ -25,7 +25,7 @@ jobs:
           MYSQL_PASSWORD: password
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 --silent" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout repository
@@ -37,6 +37,9 @@ jobs:
           php-version: 8.2
           extensions: mbstring, pdo_mysql, intl
           coverage: xdebug
+
+      - name: Set environment variables
+        run: echo "DATABASE_URL=mysql://user:password@127.0.0.1:3306/database_test" > .env.test.local
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
@@ -55,7 +58,7 @@ jobs:
 
       - name: Prepare Database
         env:
-          APP_ENV: test  # 🔹 Asegura que Symfony use la BD correcta
+          APP_ENV: test
         run: |
           echo "⚙️ Resetting database..."
           mysql -h 127.0.0.1 -u user -ppassword -e "DROP DATABASE IF EXISTS database_test;"
@@ -77,13 +80,13 @@ jobs:
           php bin/console doctrine:fixtures:load --no-interaction --env=test || { echo "❌ Fixtures failed"; exit 1; }
 
           echo "✅ Database is ready!"
-          sleep 5  # 🔹 Esperamos 5 segundos para asegurarnos de que MySQL termine todos los procesos.
+          sleep 5
 
       - name: Debug Database Schema After Setup
         run: |
           echo "🔍 Verifying if tables exist..."
           php bin/console doctrine:query:sql "SHOW TABLES" --env=test || { echo "❌ No tables found!"; exit 1; }
-          sleep 2  # 🔹 Espera 2 segundos antes de los tests.
+          sleep 2
 
       - name: Run tests
         env:
