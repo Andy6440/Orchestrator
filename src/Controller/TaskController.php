@@ -44,8 +44,9 @@ final class TaskController extends AbstractController
 
     public function delete(Request $request, $id): JsonResponse
     {
+        $session = $request->attributes->get('session');
         return $this->responseService->withResponseTransaction(
-            fn() => $this->taskService->delete($id),
+            fn() => $this->taskService->delete($id, $session),
             'Delete successful',
             200
         );

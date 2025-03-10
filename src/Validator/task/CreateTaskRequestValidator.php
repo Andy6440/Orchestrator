@@ -43,16 +43,7 @@ final class CreateTaskRequestValidator extends ConstraintValidator
             $errors['status'] = 'The status must be one of: pending, in_progress, completed.';
         }
 
-        // Created By validation
-        // Created By validation
-        if (empty($value['createdBy']) || !is_integer($value['createdBy'])) {
-            $errors['createdBy'] = 'The createdBy field is required and must be a valid user ID.';
-        } else {
-            $user = $this->entityManager->getRepository(User::class)->find($value['createdBy']);
-            if (!$user) {
-                $errors['createdBy'] = 'The specified creator does not exist.';
-            }
-        }
+      
 
         // Assigned To validation
         if (empty($value['assignedTo']) || !is_integer($value['assignedTo'])) {

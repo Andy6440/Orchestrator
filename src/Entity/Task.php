@@ -3,9 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\TaskRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\Table(name: 'tasks')]
@@ -33,7 +34,7 @@ class Task
     #[ORM\JoinColumn(name: "assigned_to", referencedColumnName: "id", nullable: true, onDelete: "SET NULL")]
     #[Groups(["task:read"])]
     private ?User $assignedTo = null;
-    
+
     #[ORM\ManyToOne(targetEntity: User::class, fetch: "EAGER")]
     #[ORM\JoinColumn(name: "created_by", referencedColumnName: "id", nullable: false)]
     #[Groups(["task:read"])]
@@ -47,11 +48,19 @@ class Task
     #[Groups(["task:read"])]
     private \DateTimeImmutable $updatedAt;
 
+    #[ORM\OneToMany(mappedBy: "task", targetEntity: Event::class, cascade: ["persist", "remove"])]
+    #[Groups(["task:read"])]
+    private Collection $events;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(["task:read"])]
+    private ?\DateTimeImmutable $deletedAt = null;
 
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+        $this->events = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -113,6 +122,7 @@ class Task
         $this->createdBy = $createdBy;
         return $this;
     }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
@@ -127,5 +137,38 @@ class Task
     {
         $this->updatedAt = new \DateTimeImmutable();
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Event>
+     */
+    public function getEvents(): Collection
+    {
+        return $this->events;
+    }
+
+    public function addEvent(Event $event): self
+    {
+        if (!$this->events->contains($event)) {
+            $this->events->add($event);
+            $event->setTask($this);
+        }
+        return $this;
+    }
+
+    public function getDeletedAt(): ?\DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTimeImmutable $deletedAt): self
+    {
+        $this->deletedAt = $deletedAt;
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
     }
 }

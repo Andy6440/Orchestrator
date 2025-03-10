@@ -46,10 +46,9 @@ class TaskService
             throw new ApiException('Task not found', ['task' => 'Task not found'], 404);
         }
         // validate the request data
-        $data['createdBy'] = $session->getUser()->getId();
         $this->validator->validate($data, new CreateTaskRequest());
 
-        $task =  $this->taskRepository->update($task, $data);
+        $task =  $this->taskRepository->update($task, $data, $session);
         // create the task
         $arrayTask = $this->serializer->serialize($task, 'json', ['groups' => ['task:read', 'user:read']]);
         $arrayTask = json_decode($arrayTask, true);
@@ -57,9 +56,9 @@ class TaskService
 
     }
 
-    public function delete($task)
+    public function delete($task, $session)
     {       
-        $this->taskRepository->delete($task);
+        $this->taskRepository->delete($task, $session);
         return [];
     }
 
