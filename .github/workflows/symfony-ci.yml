@@ -15,6 +15,21 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_database
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+          --default-authentication-plugin=mysql_native_password
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,38 +38,49 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
-          extensions: mbstring, pdo_sqlite, intl
+          extensions: mbstring, pdo_mysql, intl
           coverage: xdebug
 
       - name: Set environment variables
-        run: echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/data_test.db" > .env.test
+        run: echo "DATABASE_URL=mysql://test_user:test_password@127.0.0.1:3306/test_database" > .env.test
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "⏳ Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h"127.0.0.1" --silent; then
+              echo "✅ MySQL is up!"
+              break
+            fi
+            echo "⚠️ Waiting for MySQL..."
+            sleep 2
+          done
 
       - name: Prepare Database
         env:
           APP_ENV: test
         run: |
-          echo "⚙️ Running migrations..."
-          php bin/console doctrine:migrations:migrate --no-interaction --env=test || {
-            echo "❌ Migration failed. Retrying without COMMENT statements...";
-            sed -i '/COMMENT/d' migrations/*.php
-            php bin/console doctrine:migrations:migrate --no-interaction --env=test || {
-              echo "❌ Migration failed again";
-              exit 1;
-            }
-          }
+          echo "⚙️ Resetting database..."
+          mysql -h 127.0.0.1 -u test_user -ptest_password -e "DROP DATABASE IF EXISTS test_database;"
+          mysql -h 127.0.0.1 -u test_user -ptest_password -e "CREATE DATABASE test_database;"
+
+          echo "📌 Running migrations..."
+          php bin/console doctrine:migrations:migrate --no-interaction --env=test || { echo "❌ Migration failed"; exit 1; }
 
           echo "📌 Loading fixtures..."
           php bin/console doctrine:fixtures:load --no-interaction --env=test || { echo "❌ Fixtures failed"; exit 1; }
 
           echo "✅ Database is ready!"
+          sleep 3
 
       - name: Debug Database Schema After Setup
         run: |
           echo "🔍 Verifying if tables exist..."
-          php bin/console doctrine:query:sql "SELECT name FROM sqlite_master WHERE type='table';" --env=test || { echo "❌ No tables found!"; exit 1; }
+          php bin/console doctrine:query:sql "SHOW TABLES" --env=test || { echo "❌ No tables found!"; exit 1; }
+          sleep 2
 
       - name: Run tests
         env:
