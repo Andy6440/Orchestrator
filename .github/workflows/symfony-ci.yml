@@ -60,10 +60,10 @@ jobs:
 
       - name: Create test database and grant permissions
         run: |
-          mysql -h 127.0.0.1 -u user -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ vars.DATABASENAME }};"
-          mysql -h 127.0.0.1 -u user -p${{ vars.DATABASEPASSWORD }} -e "CREATE USER IF NOT EXISTS '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED BY '${{ vars.DATABASEPASSWORD }}';"
-          mysql -h 127.0.0.1 -u user -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}.* TO '${{ vars.DATABASEUSER }}'@'%';"
-          mysql -h 127.0.0.1 -u user -p${{ vars.DATABASEPASSWORD }} -e "FLUSH PRIVILEGES;"
+          mysql -h 127.0.0.1 -u user -p password -e "CREATE DATABASE IF NOT EXISTS ${{ vars.DATABASENAME }};"
+          mysql -h 127.0.0.1 -u user -p password -e "CREATE USER IF NOT EXISTS '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED BY '${{ vars.DATABASEPASSWORD }}';"
+          mysql -h 127.0.0.1 -u user -p password -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}.* TO '${{ vars.DATABASEUSER }}'@'%';"
+          mysql -h 127.0.0.1 -u user -p password -e "FLUSH PRIVILEGES;"
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
