@@ -50,6 +50,7 @@ nano .env
 Example `.env` configuration:
 ```ini
 DATABASE_URL="mysql://user:password@127.0.0.1:3306/database?serverVersion=8.0.33"
+APP_URL=http://127.0.0.1:8000/
 ```
 📌 The system requires two databases:
 - `database` → Main database for production and development
