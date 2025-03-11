@@ -41,7 +41,7 @@ jobs:
           coverage: xdebug
 
       - name: Set environment variables
-        run: echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@${{ vars.DATABASEHOST }}:${{ vars.DATABASEPORT }}/${{ vars.DATABASENAME }}" > .env.test
+        run: echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@${{ vars.DATABASEHOST }}:${{ vars.DATABASEPORT }}/${{ vars.DATABASENAME }}_test" > .env.test
 
       - name: Load environment variables
         run: cat .env.test >> $GITHUB_ENV
@@ -57,6 +57,12 @@ jobs:
             echo "⚠️ Waiting for MySQL..."
             sleep 2
           done
+
+      - name: Create test database and grant permissions
+        run: |
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ vars.DATABASENAME }}_test;"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}_test.* TO '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED BY '${{ vars.DATABASEPASSWORD }}';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "FLUSH PRIVILEGES;"
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
