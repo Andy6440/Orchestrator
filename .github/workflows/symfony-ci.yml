@@ -19,15 +19,14 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: test_database
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
-          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_PASSWORD: ${{ vars.DATABASEPASSWORD }}
+          MYSQL_DATABASE: ${{ vars.DATABASENAME }}
+          MYSQL_USER: ${{ vars.DATABASEUSER }}
+          MYSQL_PASSWORD: ${{ vars.DATABASEPASSWORD }}
         ports:
-          - 3307:3306
+          - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost --silent"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --protocol=tcp --silent"
           --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
@@ -42,7 +41,7 @@ jobs:
           coverage: xdebug
 
       - name: Set environment variables
-        run: echo "DATABASE_URL=mysql://test_user:test_password@localhost:3307/test_database" > .env.test
+        run: echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@${{ vars.DATABASEHOST }}:${{ vars.DATABASEPORT }}/${{ vars.DATABASENAME }}" > .env.test
 
       - name: Load environment variables
         run: cat .env.test >> $GITHUB_ENV
@@ -51,20 +50,13 @@ jobs:
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
           for i in {1..30}; do
-            if mysqladmin ping -h"localhost" --silent --user=test_user --password=test_password; then
+            if mysqladmin ping -h "127.0.0.1" --protocol=tcp --silent --user=${{ vars.DATABASEUSER }} --password=${{ vars.DATABASEPASSWORD }}; then
               echo "✅ MySQL is up!"
               break
             fi
             echo "⚠️ Waiting for MySQL..."
             sleep 2
           done
-
-      - name: Configure Symfony CLI for private recipes
-        env:
-          SYMFONY_AUTH: ${{ secrets.SYMFONY_AUTH }}
-        run: |
-          symfony server:ca:install || true
-          symfony composer config http-basic.repo.symfony.com "" "$SYMFONY_AUTH"
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
