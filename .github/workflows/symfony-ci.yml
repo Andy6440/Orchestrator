@@ -92,3 +92,13 @@ jobs:
 
           echo "🛠 Running tests..."
           php bin/phpunit --coverage-text --colors=never
+      - name: Check test results
+        if: failure() && github.event_name == 'push'
+        run: |
+          echo "❌ Tests failed! Push aborted."
+          exit 1
+      - name: Check test results for PR
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          echo "❌ Tests failed! Cannot merge this PR until tests pass."
+          exit 1
