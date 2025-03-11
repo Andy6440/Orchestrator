@@ -25,6 +25,12 @@ class AuthService
         $this->serializer = $serializer;
     }
 
+    public function index()
+    {
+        return [
+            'message' => 'Welcome to the API'
+        ];
+    }
     public function login(array $data)
     {
         // validate the request data

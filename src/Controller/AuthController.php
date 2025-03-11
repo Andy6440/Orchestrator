@@ -22,6 +22,15 @@ final class AuthController extends AbstractController
         $this->authService = $authService;
         $this->responseService = $responseService;
     }
+
+    public function index(): JsonResponse
+    {
+        return $this->responseService->withResponse(
+            fn() => $this->authService->index(),
+            'Welcome to the API',
+            200
+        );
+    }
     public function login(Request $request, ValidatorInterface $validator): JsonResponse
     {
 
