@@ -43,7 +43,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@127.0.0.1:3306/database?serverVersion=8.0" > .env.test
+          echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@127.0.0.1:3306/database?serverVersion=8.0.31" > .env.test
 
       - name: Load environment variables
         run: cat .env.test >> $GITHUB_ENV
