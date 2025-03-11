@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
           for i in {1..30}; do
-            if mysqladmin ping -h "127.0.0.1" --protocol=tcp --silent --user=${{ vars.DATABASEUSER }} --password=${{ vars.DATABASEPASSWORD }}; then
+            if mysqladmin ping -h "127.0.0.1" --protocol=tcp --silent --user=root --password=${{ vars.DATABASEPASSWORD }}; then
               echo "✅ MySQL is up!"
               break
             fi
@@ -61,7 +61,8 @@ jobs:
       - name: Create test database and grant permissions
         run: |
           mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ vars.DATABASENAME }};"
-          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}.* TO '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED BY '${{ vars.DATABASEPASSWORD }}';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE USER IF NOT EXISTS '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED BY '${{ vars.DATABASEPASSWORD }}';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}.* TO '${{ vars.DATABASEUSER }}'@'%';"
           mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "FLUSH PRIVILEGES;"
 
       - name: Install dependencies
@@ -71,6 +72,6 @@ jobs:
         env:
           APP_ENV: test
         run: |
-          php bin/console doctrine:migrations:migrate --no-interaction --env=test
-          php bin/console doctrine:fixtures:load --no-interaction --env=test
+          php bin/console doctrine:migrations:migrate --no-interaction
+          php bin/console doctrine:fixtures:load --no-interaction 
           php bin/phpunit --coverage-text --colors=never
