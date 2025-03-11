@@ -29,7 +29,6 @@ jobs:
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 --protocol=tcp --silent"
           --health-interval=10s --health-timeout=5s --health-retries=10
-          --memory=512m  # 🔹 Limita la memoria para evitar fallos en GitHub Actions
 
     steps:
       - name: Checkout repository
