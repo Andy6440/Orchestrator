@@ -23,6 +23,7 @@ jobs:
           MYSQL_DATABASE: database
           MYSQL_USER: ${{ vars.DATABASEUSER }}
           MYSQL_PASSWORD: ${{ vars.DATABASEPASSWORD }}
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
         ports:
           - 3306:3306
         options: >-
@@ -40,14 +41,12 @@ jobs:
           extensions: mbstring, pdo_mysql, intl
           coverage: xdebug
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
       - name: Set environment variables
         run: |
           echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@127.0.0.1:3306/database?serverVersion=8.0.31" > .env.test
-          echo "APP_ENV=test" >> .env.test
-          cat .env.test >> $GITHUB_ENV
+
+      - name: Load environment variables
+        run: cat .env.test >> $GITHUB_ENV
 
       - name: Wait for MySQL to be ready
         run: |
@@ -68,36 +67,28 @@ jobs:
 
       - name: Create test database and grant permissions
         run: |
-          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS database;"
-          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS database_test;"
-          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON database.* TO '${{ vars.DATABASEUSER }}'@'%';"
-          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON database_test.* TO '${{ vars.DATABASEUSER }}'@'%';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS \`database\`;"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS \`database_test\`;"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "ALTER USER '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED WITH mysql_native_password BY '${{ vars.DATABASEPASSWORD }}';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON \`database\`.* TO '${{ vars.DATABASEUSER }}'@'%';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON \`database_test\`.* TO '${{ vars.DATABASEUSER }}'@'%';"
           mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "FLUSH PRIVILEGES;"
 
-      - name: Run database migrations
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Ensure MySQL is fully up
+        run: sleep 10
+
+      - name: Run migrations and tests
         env:
           APP_ENV: test
         run: |
           echo "🛠 Running database migrations..."
-          php bin/console doctrine:migrations:migrate --no-interaction
-          APP_ENV=test php bin/console doctrine:migrations:migrate --no-interaction
+          php bin/console doctrine:migrations:migrate --no-interaction || (echo "❌ Migration failed. Debugging..." && mysql -h 127.0.0.1 -u ${{ vars.DATABASEUSER }} -p${{ vars.DATABASEPASSWORD }} -e "SHOW DATABASES;" && exit 1)
 
-      - name: Load fixtures
-        env:
-          APP_ENV: test
-        run: |
           echo "🛠 Loading fixtures..."
           php bin/console doctrine:fixtures:load --no-interaction
 
-      - name: Run tests
-        env:
-          APP_ENV: test
-        run: |
           echo "🛠 Running tests..."
           php bin/phpunit --coverage-text --colors=never
-
-      - name: Check test results
-        if: failure()
-        run: |
-          echo "❌ Tests failed! Cannot merge this PR until tests pass."
-          exit 1
