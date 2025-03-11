@@ -23,6 +23,7 @@ jobs:
           MYSQL_DATABASE: ${{ vars.DATABASENAME }}
           MYSQL_USER: ${{ vars.DATABASEUSER }}
           MYSQL_PASSWORD: ${{ vars.DATABASEPASSWORD }}
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
         ports:
           - 3306:3306
         options: >-
@@ -41,7 +42,8 @@ jobs:
           coverage: xdebug
 
       - name: Set environment variables
-        run: echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@${{ vars.DATABASEHOST }}:${{ vars.DATABASEPORT }}/${{ vars.DATABASENAME }}" > .env.test
+        run: |
+          echo "DATABASE_URL=mysql://${{ vars.DATABASEUSER }}:${{ vars.DATABASEPASSWORD }}@127.0.0.1:3306/${{ vars.DATABASENAME }}" > .env.test
 
       - name: Load environment variables
         run: cat .env.test >> $GITHUB_ENV
@@ -58,15 +60,23 @@ jobs:
             sleep 2
           done
 
+      - name: Verify MySQL connection
+        run: |
+          echo "🔍 Checking databases..."
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "SHOW DATABASES;"
+
       - name: Create test database and grant permissions
         run: |
-          mysql -h 127.0.0.1 -u user -p password -e "CREATE DATABASE IF NOT EXISTS ${{ vars.DATABASENAME }};"
-          mysql -h 127.0.0.1 -u user -p password -e "CREATE USER IF NOT EXISTS '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED BY '${{ vars.DATABASEPASSWORD }}';"
-          mysql -h 127.0.0.1 -u user -p password -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}.* TO '${{ vars.DATABASEUSER }}'@'%';"
-          mysql -h 127.0.0.1 -u user -p password -e "FLUSH PRIVILEGES;"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ vars.DATABASENAME }};"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "ALTER USER '${{ vars.DATABASEUSER }}'@'%' IDENTIFIED WITH mysql_native_password BY '${{ vars.DATABASEPASSWORD }}';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ vars.DATABASENAME }}.* TO '${{ vars.DATABASEUSER }}'@'%';"
+          mysql -h 127.0.0.1 -u root -p${{ vars.DATABASEPASSWORD }} -e "FLUSH PRIVILEGES;"
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Ensure MySQL is fully up
+        run: sleep 10
 
       - name: Run migrations and tests
         env:
